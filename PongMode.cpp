@@ -182,23 +182,23 @@ void PongMode::update(float elapsed) {
 		if (max.x - min.x > max.y - min.y) {
 			//wider overlap in x => bounce in y direction:
 			if (ball.y > paddle.y) {
-				ball.y = paddle.y + paddle_radius.y + ball_radius.y;
+				ball.y = paddle.y + paddle_radius.y + ball_radius;
 				ball_velocity.y = std::abs(ball_velocity.y);
 			} else {
-				ball.y = paddle.y - paddle_radius.y - ball_radius.y;
+				ball.y = paddle.y - paddle_radius.y - ball_radius;
 				ball_velocity.y = -std::abs(ball_velocity.y);
 			}
 		} else {
 			//wider overlap in y => bounce in x direction:
 			if (ball.x > paddle.x) {
-				ball.x = paddle.x + paddle_radius.x + ball_radius.x;
+				ball.x = paddle.x + paddle_radius.x + ball_radius;
 				ball_velocity.x = std::abs(ball_velocity.x);
 			} else {
-				ball.x = paddle.x - paddle_radius.x - ball_radius.x;
+				ball.x = paddle.x - paddle_radius.x - ball_radius;
 				ball_velocity.x = -std::abs(ball_velocity.x);
 			}
 			//warp y velocity based on offset from paddle center:
-			float vel = (ball.y - paddle.y) / (paddle_radius.y + ball_radius.y);
+			float vel = (ball.y - paddle.y) / (paddle_radius.y + ball_radius);
 			ball_velocity.y = glm::mix(ball_velocity.y, vel, 0.75f);
 		}
 	};
@@ -206,33 +206,35 @@ void PongMode::update(float elapsed) {
 	paddle_vs_ball(right_paddle);
 
 	//court walls:
-	if (ball.y > court_radius.y - ball_radius.y) {
-		ball.y = court_radius.y - ball_radius.y;
+	if (ball.y > court_radius.y - ball_radius) {
+		ball.y = court_radius.y - ball_radius;
 		if (ball_velocity.y > 0.0f) {
 			ball_velocity.y = -ball_velocity.y;
 		}
 	}
-	if (ball.y < -court_radius.y + ball_radius.y) {
-		ball.y = -court_radius.y + ball_radius.y;
+	if (ball.y < -court_radius.y + ball_radius) {
+		ball.y = -court_radius.y + ball_radius;
 		if (ball_velocity.y < 0.0f) {
 			ball_velocity.y = -ball_velocity.y;
 		}
 	}
 
-	if (ball.x > court_radius.x - ball_radius.x) {
-		ball.x = court_radius.x - ball_radius.x;
+	if (ball.x > court_radius.x - ball_radius) {
+		ball.x = court_radius.x - ball_radius;
 		if (ball_velocity.x > 0.0f) {
 			ball_velocity.x = -ball_velocity.x;
 			left_score += 1;
 		}
 	}
-	if (ball.x < -court_radius.x + ball_radius.x) {
-		ball.x = -court_radius.x + ball_radius.x;
+	if (ball.x < -court_radius.x + ball_radius) {
+		ball.x = -court_radius.x + ball_radius;
 		if (ball_velocity.x < 0.0f) {
 			ball_velocity.x = -ball_velocity.x;
 			right_score += 1;
 		}
 	}
+
+	// star
 
 	//----- gradient trails -----
 
@@ -353,7 +355,7 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 			color.a = 255 - 255 / STEPS * step;
 
 			//draw:
-			draw_circle(at, ball_radius.x, color);
+			draw_circle(at, ball_radius, color);
 		}
 	}
 
@@ -372,7 +374,7 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 
 	//ball:
 	// draw_rectangle(ball, ball_radius, fg_color);
-	draw_circle(ball, ball_radius.x, fg_color);
+	draw_circle(ball, ball_radius, fg_color);
 
 	//scores:
 	glm::vec2 score_radius = glm::vec2(0.1f, 0.1f);
