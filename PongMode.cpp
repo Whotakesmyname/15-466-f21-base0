@@ -285,6 +285,19 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 		vertices.emplace_back(glm::vec3(center.x-radius.x, center.y+radius.y, 0.0f), color, glm::vec2(0.5f, 0.5f));
 	};
 
+	//inline helper function for circle drawing:
+	auto draw_circle = [&vertices](glm::vec2 const &center, float radius, glm::u8vec4 const &color) {
+		constexpr int TRIANGLE_N = 360;  // number of triangles composing the circle
+		// draw circle as N CCW-oriented triangles:
+		float angle = 0.f;
+		for (int i = 0; i < TRIANGLE_N; ++i) {
+			vertices.emplace_back(glm::vec3(center.x, center.y, 0.f), color, glm::vec2(0.5f, 0.5f));
+			vertices.emplace_back(glm::vec3(center.x + radius*glm::cos(angle), center.y+radius*glm::sin(angle), 0.f), color, glm::vec2(0.5f, 0.5f));
+			angle += 2 * glm::pi<float>() / TRIANGLE_N;
+			vertices.emplace_back(glm::vec3(center.x + radius*glm::cos(angle), center.y+radius*glm::sin(angle), 0.f), color, glm::vec2(0.5f, 0.5f));
+		}
+	};
+
 	//shadows for everything (except the trail):
 
 	glm::vec2 s = glm::vec2(0.0f,-shadow_offset);
@@ -295,7 +308,7 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 	draw_rectangle(glm::vec2( 0.0f, court_radius.y+wall_radius)+s, glm::vec2(court_radius.x, wall_radius), shadow_color);
 	draw_rectangle(left_paddle+s, paddle_radius, shadow_color);
 	draw_rectangle(right_paddle+s, paddle_radius, shadow_color);
-	draw_rectangle(ball+s, ball_radius, shadow_color);
+	// draw_circle(ball+s, ball_radius.x, shadow_color);  // ball shadow
 
 	//ball's trail:
 	if (ball_trail.size() >= 2) {
@@ -336,8 +349,11 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 				glm::mix(glm::vec4(trail_colors[ci]), glm::vec4(trail_colors[ci+1]), cf)
 			);
 
+			// do some alpha gradient
+			color.a = 255 - 255 / STEPS * step;
+
 			//draw:
-			draw_rectangle(at, ball_radius, color);
+			draw_circle(at, ball_radius.x, color);
 		}
 	}
 
@@ -355,7 +371,8 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 	
 
 	//ball:
-	draw_rectangle(ball, ball_radius, fg_color);
+	// draw_rectangle(ball, ball_radius, fg_color);
+	draw_circle(ball, ball_radius.x, fg_color);
 
 	//scores:
 	glm::vec2 score_radius = glm::vec2(0.1f, 0.1f);
