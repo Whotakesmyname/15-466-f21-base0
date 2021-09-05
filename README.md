@@ -2,7 +2,7 @@
 
 Author: Hao Chen
 
-Design: Pong in space with gravity and hit stars to earn bonus points for your next score!
+Design: Pong in universe with stars and hit them to earn bonus points for your next score. Take care of gravity!
 
 Screen Shot:
 
