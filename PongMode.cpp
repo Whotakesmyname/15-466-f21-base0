@@ -190,6 +190,7 @@ void PongMode::update(float elapsed) {
 			}
 		} else {
 			//wider overlap in y => bounce in x direction:
+			float originx = ball_velocity.x;
 			if (ball.x > paddle.x) {
 				ball.x = paddle.x + paddle_radius.x + ball_radius;
 				ball_velocity.x = std::abs(ball_velocity.x);
@@ -201,6 +202,9 @@ void PongMode::update(float elapsed) {
 			float vel = (ball.y - paddle.y) / (paddle_radius.y + ball_radius);
 			ball_velocity.y = glm::mix(ball_velocity.y, vel, 0.75f);
 		}
+
+		// hack: collision with paddle gives ball a minimal x-speed avoiding too much energy loss
+		ball_velocity.x = glm::sign(ball_velocity.x) * glm::max(1.f, glm::abs(ball_velocity.x));
 	};
 	paddle_vs_ball(left_paddle);
 	paddle_vs_ball(right_paddle);
@@ -235,6 +239,20 @@ void PongMode::update(float elapsed) {
 	}
 
 	// star
+	{
+		float radius_sum = ball_radius + star_radius;
+		glm::vec2 dir = ball - star;
+		if (glm::length(dir) <= radius_sum) {
+			// bonce
+			glm::vec2 N = glm::normalize(dir);
+			ball = star + radius_sum * N;
+			ball_velocity = glm::reflect(ball_velocity, N);
+		}
+	}
+
+	//----- gravity handling -----
+
+	
 
 	//----- gradient trails -----
 
@@ -361,6 +379,9 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 
 	//solid objects:
 
+	// star
+	draw_circle(star, star_radius, fg_color);
+
 	//walls:
 	draw_rectangle(glm::vec2(-court_radius.x-wall_radius, 0.0f), glm::vec2(wall_radius, court_radius.y + 2.0f * wall_radius), fg_color);
 	draw_rectangle(glm::vec2( court_radius.x+wall_radius, 0.0f), glm::vec2(wall_radius, court_radius.y + 2.0f * wall_radius), fg_color);
@@ -371,9 +392,7 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 	draw_rectangle(left_paddle, paddle_radius, fg_color);
 	draw_rectangle(right_paddle, paddle_radius, fg_color);
 	
-
 	//ball:
-	// draw_rectangle(ball, ball_radius, fg_color);
 	draw_circle(ball, ball_radius, fg_color);
 
 	//scores:

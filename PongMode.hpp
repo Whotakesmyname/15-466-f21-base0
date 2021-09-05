@@ -34,7 +34,7 @@ struct PongMode : Mode {
 	glm::vec2 ball = glm::vec2(0.0f, 0.0f);
 	glm::vec2 ball_velocity = glm::vec2(-1.0f, 0.0f);
 
-	glm::vec2 star;
+	glm::vec2 star = glm::vec2(5.f, 2.f);
 	glm::vec2 star_velocity;
 
 
