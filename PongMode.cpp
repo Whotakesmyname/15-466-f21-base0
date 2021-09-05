@@ -251,7 +251,6 @@ void PongMode::update(float elapsed) {
 			}
 		} else {
 			//wider overlap in y => bounce in x direction:
-			float originx = ball_velocity.x;
 			if (ball.x > paddle.x) {
 				ball.x = paddle.x + paddle_radius.x + ball_radius;
 				ball_velocity.x = std::abs(ball_velocity.x);
