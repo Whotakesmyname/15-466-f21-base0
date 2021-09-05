@@ -168,6 +168,34 @@ void PongMode::update(float elapsed) {
 
 	ball += elapsed * speed_multiplier * ball_velocity;
 
+	//----- star update -----
+
+	star += elapsed * star_velocity;
+
+	// star generate helper function
+	auto star_generator = [this]() {
+		std::uniform_real_distribution<float> pos_dist(-court_radius.x, court_radius.x);
+		std::uniform_real_distribution<float> radius_dist(2 * ball_radius, 2 * paddle_radius.y);
+		std::uniform_real_distribution<float> velocity_dist(-2.f, -0.75f);
+
+		star_radius = radius_dist(random_engine);
+		star_radius_p3 = glm::pow(star_radius, 3.f);
+		star.x = pos_dist(random_engine);
+		star.y = court_radius.y + 2.0f * wall_radius + padding + star_radius;
+		star_velocity.y = velocity_dist(random_engine);
+		star_valid = true;
+	};
+
+	{
+		// out of view detection
+		// box-sphere collision testing idea from Philip, Eberly, Geometric tools for computer graphics, Morgan Kaufmann, pp.644-646, 2002.
+		glm::vec2 distance_vec = glm::max(glm::vec2(0.f, 0.f), glm::abs(star) - court_radius - 2 * wall_radius - padding);
+		if (glm::length(distance_vec) > star_radius) {
+			// star is out of view
+			star_generator();
+		}
+	}
+
 	//---- collision handling ----
 
 	//paddles:
@@ -239,20 +267,29 @@ void PongMode::update(float elapsed) {
 	}
 
 	// star
-	{
+	if (star_valid) {
 		float radius_sum = ball_radius + star_radius;
 		glm::vec2 dir = ball - star;
 		if (glm::length(dir) <= radius_sum) {
-			// bonce
+			// bounce
 			glm::vec2 N = glm::normalize(dir);
 			ball = star + radius_sum * N;
 			ball_velocity = glm::reflect(ball_velocity, N);
+
+			// disable this star in case the ball orbits it
+			star_valid = false;
 		}
 	}
 
 	//----- gravity handling -----
 
-	
+	if (star_valid) {
+		constexpr float G = 8.f;  // gravity coefficient
+		// constexpr float gravity_radius_ratio = 3.f;
+		glm::vec2 dis = star - ball;
+		glm::vec2 gravity_vel = elapsed * G * star_radius_p3 / glm::dot(dis, dis) * glm::normalize(dis);
+		ball_velocity += gravity_vel;
+	}
 
 	//----- gradient trails -----
 
@@ -282,11 +319,6 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 		HEX_TO_U8VEC4(0xbacac088),
 	};
 	#undef HEX_TO_U8VEC4
-
-	//other useful drawing constants:
-	const float wall_radius = 0.05f;
-	const float shadow_offset = 0.07f;
-	const float padding = 0.14f; //padding between outside of walls and edge of window
 
 	//---- compute vertices to draw ----
 
@@ -380,7 +412,7 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 	//solid objects:
 
 	// star
-	draw_circle(star, star_radius, fg_color);
+	draw_circle(star, star_radius, star_valid ? fg_color : glm::u8vec4(125));
 
 	//walls:
 	draw_rectangle(glm::vec2(-court_radius.x-wall_radius, 0.0f), glm::vec2(wall_radius, court_radius.y + 2.0f * wall_radius), fg_color);
@@ -396,7 +428,6 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 	draw_circle(ball, ball_radius, fg_color);
 
 	//scores:
-	glm::vec2 score_radius = glm::vec2(0.1f, 0.1f);
 	for (uint32_t i = 0; i < left_score; ++i) {
 		draw_rectangle(glm::vec2( -court_radius.x + (2.0f + 3.0f * i) * score_radius.x, court_radius.y + 2.0f * wall_radius + 2.0f * score_radius.y), score_radius, fg_color);
 	}

@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <deque>
+#include <random>
 
 /*
  * PongMode is a game mode that implements a single-player game of Pong.
@@ -26,7 +27,8 @@ struct PongMode : Mode {
 	glm::vec2 court_radius = glm::vec2(7.0f, 5.0f);
 	glm::vec2 paddle_radius = glm::vec2(0.2f, 1.0f);
 	float ball_radius = 0.2f;
-	float star_radius = 1.0f;  // star radius^3 is proportional to its gravity force
+	float star_radius = 1.0f;
+	float star_radius_p3 = 1.0f;  // star radius^3 is proportional to its gravity force
 
 	glm::vec2 left_paddle = glm::vec2(-court_radius.x + 0.5f, 0.0f);
 	glm::vec2 right_paddle = glm::vec2( court_radius.x - 0.5f, 0.0f);
@@ -35,7 +37,10 @@ struct PongMode : Mode {
 	glm::vec2 ball_velocity = glm::vec2(-1.0f, 0.0f);
 
 	glm::vec2 star = glm::vec2(5.f, 2.f);
-	glm::vec2 star_velocity;
+	glm::vec2 star_velocity = glm::vec2(0.f, -1.f);
+	bool star_valid = true;
+	float star_fadeout_countdown = 0.f;
+	std::mt19937 random_engine;  // prng for star generation
 
 
 	uint32_t left_score = 0;
@@ -48,6 +53,12 @@ struct PongMode : Mode {
 
 	float trail_length = 1.3f;
 	std::deque< glm::vec3 > ball_trail; //stores (x,y,age), oldest elements first
+
+	//----- scene settings -----
+	const float wall_radius = 0.05f;
+	const float shadow_offset = 0.07f;
+	const float padding = 0.14f; //padding between outside of walls and edge of window
+	const glm::vec2 score_radius = glm::vec2(.1f, .1f);
 
 	//----- opengl assets / helpers ------
 
