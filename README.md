@@ -1,8 +1,8 @@
-# (TODO: your game's title)
+# Space Pong
 
-Author: (TODO: your name)
+Author: Hao Chen
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: Pong in space with gravity and hit stars to earn bonus points for your next score!
 
 Screen Shot:
 
@@ -10,8 +10,8 @@ Screen Shot:
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
-
-Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
+- Use mouse to control your left paddle to hit the ball back just like what you did in other Pong games.
+- There will be stars passing by with gravity attracting the ball. Bigger stars have greater gravity, of course!
+- Every time the ball hits a star, 1 more bonus point will be granted for the next score. It can be yours or your opponent's.
 
 This game was built with [NEST](NEST.md).

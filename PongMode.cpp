@@ -15,6 +15,20 @@ PongMode::PongMode() {
 	ball_trail.emplace_back(ball, trail_length);
 	ball_trail.emplace_back(ball, 0.0f);
 
+	// set up background stars
+	bg_stars.reserve(bg_star_n);
+	bg_stars_radius.reserve(bg_star_n);
+	bg_stars_velocity_y.reserve(bg_star_n);
+	std::uniform_real_distribution<float> x_dist(left, right);
+	std::uniform_real_distribution<float> y_dist(bottom, upper);
+	std::uniform_real_distribution<float> r_dist(bg_star_r_min, bg_star_r_max);
+	std::uniform_real_distribution<float> v_dist(-15.f, -.5f);
+	for (int i = 0; i < bg_star_n; ++i) {
+		bg_stars.emplace_back(x_dist(random_engine), y_dist(random_engine));
+		bg_stars_radius.emplace_back(r_dist(random_engine));
+		bg_stars_velocity_y.emplace_back(v_dist(random_engine));
+	}
+
 	
 	//----- allocate OpenGL resources -----
 	{ //vertex buffer:
@@ -177,12 +191,14 @@ void PongMode::update(float elapsed) {
 		std::uniform_real_distribution<float> pos_dist(-court_radius.x, court_radius.x);
 		std::uniform_real_distribution<float> radius_dist(2 * ball_radius, 2 * paddle_radius.y);
 		std::uniform_real_distribution<float> velocity_dist(-2.f, -0.75f);
+		std::uniform_int_distribution<uint32_t> type_dist(0, 2);
 
 		star_radius = radius_dist(random_engine);
 		star_radius_p3 = glm::pow(star_radius, 3.f);
 		star.x = pos_dist(random_engine);
 		star.y = court_radius.y + 2.0f * wall_radius + padding + star_radius;
 		star_velocity.y = velocity_dist(random_engine);
+		star_type = type_dist(random_engine);
 		star_valid = true;
 	};
 
@@ -193,6 +209,23 @@ void PongMode::update(float elapsed) {
 		if (glm::length(distance_vec) > star_radius) {
 			// star is out of view
 			star_generator();
+		}
+	}
+
+	//---- background stars update ----
+	{
+		std::uniform_real_distribution<float> x_dist(left, right);
+		std::uniform_real_distribution<float> y_dist(bottom, upper);
+		std::uniform_real_distribution<float> r_dist(bg_star_r_min, bg_star_r_max);
+		std::uniform_real_distribution<float> v_dist(-15.f, -.5f);
+		for (int i = 0; i < bg_star_n; ++i) {
+			bg_stars[i].y += elapsed * bg_stars_velocity_y[i];
+			if (bg_stars[i].y < bottom) {
+				bg_stars[i].x = x_dist(random_engine);
+				bg_stars[i].y = upper;
+				bg_stars_velocity_y[i] = v_dist(random_engine);
+				bg_stars_radius[i] = r_dist(random_engine);
+			}
 		}
 	}
 
@@ -232,7 +265,7 @@ void PongMode::update(float elapsed) {
 		}
 
 		// hack: collision with paddle gives ball a minimal x-speed avoiding too much energy loss
-		// ball_velocity.x = glm::sign(ball_velocity.x) * glm::max(1.f, glm::abs(ball_velocity.x));
+		ball_velocity.x = glm::sign(ball_velocity.x) * glm::max(1.f, glm::abs(ball_velocity.x));
 	};
 	paddle_vs_ball(left_paddle);
 	paddle_vs_ball(right_paddle);
@@ -317,7 +350,7 @@ void PongMode::update(float elapsed) {
 void PongMode::draw(glm::uvec2 const &drawable_size) {
 	//some nice colors from the course web page:
 	#define HEX_TO_U8VEC4( HX ) (glm::u8vec4( (HX >> 24) & 0xff, (HX >> 16) & 0xff, (HX >> 8) & 0xff, (HX) & 0xff ))
-	const glm::u8vec4 bg_color = HEX_TO_U8VEC4(0x193b59ff);
+	const glm::u8vec4 bg_color = HEX_TO_U8VEC4(0x000000ff);
 	const glm::u8vec4 fg_color = HEX_TO_U8VEC4(0xf2d2b6ff);
 	const glm::u8vec4 shadow_color = HEX_TO_U8VEC4(0xf2ad94ff);
 	const std::vector< glm::u8vec4 > trail_colors = {
@@ -325,6 +358,13 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 		HEX_TO_U8VEC4(0xf2897288),
 		HEX_TO_U8VEC4(0xbacac088),
 	};
+	const std::vector<glm::u8vec4> star_colors = {
+		HEX_TO_U8VEC4(0x4c86adff),
+		HEX_TO_U8VEC4(0x9e9890ff),
+		HEX_TO_U8VEC4(0xc2591dff)
+	};
+	const glm::u8vec4 star_color_invalid = HEX_TO_U8VEC4(0xffffff22);
+	const glm::u8vec4 bg_stars_color = HEX_TO_U8VEC4(0xffffffff);
 	#undef HEX_TO_U8VEC4
 
 	//---- compute vertices to draw ----
@@ -418,8 +458,14 @@ void PongMode::draw(glm::uvec2 const &drawable_size) {
 
 	//solid objects:
 
+	// background stars
+	// draw as rectangles for speed
+	for (int i = 0; i < bg_star_n; ++i) {
+		draw_rectangle(bg_stars[i], glm::vec2(bg_stars_radius[i]), bg_stars_color);
+	}
+
 	// star
-	draw_circle(star, star_radius, star_valid ? fg_color : glm::u8vec4(125));
+	draw_circle(star, star_radius, star_valid ? star_colors[star_type] : star_color_invalid);
 
 	//walls:
 	draw_rectangle(glm::vec2(-court_radius.x-wall_radius, 0.0f), glm::vec2(wall_radius, court_radius.y + 2.0f * wall_radius), fg_color);

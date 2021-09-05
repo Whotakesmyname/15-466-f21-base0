@@ -39,8 +39,16 @@ struct PongMode : Mode {
 
 	glm::vec2 star = glm::vec2(5.f, 2.f);
 	glm::vec2 star_velocity = glm::vec2(0.f, -1.f);
+	uint32_t star_type = 0;
 	bool star_valid = true;
 	std::mt19937 random_engine;  // prng for star generation
+
+	const int bg_star_n = 100;
+	const float bg_star_r_min = 0.005f;
+	const float bg_star_r_max = 0.02f;
+	std::vector<glm::vec2> bg_stars;
+	std::vector<float> bg_stars_radius;
+	std::vector<float> bg_stars_velocity_y;
 
 
 	uint32_t left_score = 0;
@@ -60,6 +68,11 @@ struct PongMode : Mode {
 	const float shadow_offset = 0.07f;
 	const float padding = 0.14f; //padding between outside of walls and edge of window
 	const glm::vec2 score_radius = glm::vec2(.1f, .1f);
+
+	const float upper = court_radius.y + 2.0f * wall_radius + padding + 3 * score_radius.y;
+	const float bottom = -court_radius.y - 2 * wall_radius - padding;
+	const float left = -court_radius.x - 2 * wall_radius - padding;
+	const float right = court_radius.x + 2 * wall_radius + padding;
 
 	//----- opengl assets / helpers ------
 
