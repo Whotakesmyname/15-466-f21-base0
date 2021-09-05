@@ -35,16 +35,17 @@ struct PongMode : Mode {
 
 	glm::vec2 ball = glm::vec2(0.0f, 0.0f);
 	glm::vec2 ball_velocity = glm::vec2(-1.0f, 0.0f);
+	const float ball_max_velocity = 1.5f;
 
 	glm::vec2 star = glm::vec2(5.f, 2.f);
 	glm::vec2 star_velocity = glm::vec2(0.f, -1.f);
 	bool star_valid = true;
-	float star_fadeout_countdown = 0.f;
 	std::mt19937 random_engine;  // prng for star generation
 
 
 	uint32_t left_score = 0;
 	uint32_t right_score = 0;
+	uint32_t carry_score = 1;
 
 	float ai_offset = 0.0f;
 	float ai_offset_update = 0.0f;

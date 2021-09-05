@@ -232,7 +232,7 @@ void PongMode::update(float elapsed) {
 		}
 
 		// hack: collision with paddle gives ball a minimal x-speed avoiding too much energy loss
-		ball_velocity.x = glm::sign(ball_velocity.x) * glm::max(1.f, glm::abs(ball_velocity.x));
+		// ball_velocity.x = glm::sign(ball_velocity.x) * glm::max(1.f, glm::abs(ball_velocity.x));
 	};
 	paddle_vs_ball(left_paddle);
 	paddle_vs_ball(right_paddle);
@@ -255,14 +255,16 @@ void PongMode::update(float elapsed) {
 		ball.x = court_radius.x - ball_radius;
 		if (ball_velocity.x > 0.0f) {
 			ball_velocity.x = -ball_velocity.x;
-			left_score += 1;
+			left_score += carry_score;
+			carry_score = 1;
 		}
 	}
 	if (ball.x < -court_radius.x + ball_radius) {
 		ball.x = -court_radius.x + ball_radius;
 		if (ball_velocity.x < 0.0f) {
 			ball_velocity.x = -ball_velocity.x;
-			right_score += 1;
+			right_score += carry_score;
+			carry_score = 1;
 		}
 	}
 
@@ -276,6 +278,8 @@ void PongMode::update(float elapsed) {
 			ball = star + radius_sum * N;
 			ball_velocity = glm::reflect(ball_velocity, N);
 
+			// plus carry score
+			++carry_score;
 			// disable this star in case the ball orbits it
 			star_valid = false;
 		}
@@ -290,6 +294,9 @@ void PongMode::update(float elapsed) {
 		glm::vec2 gravity_vel = elapsed * G * star_radius_p3 / glm::dot(dis, dis) * glm::normalize(dis);
 		ball_velocity += gravity_vel;
 	}
+
+	// because of unconservation of energy caused by abruptly changing gravity here, cap the velocity
+	ball_velocity = glm::min(ball_max_velocity, glm::length(ball_velocity)) * glm::normalize(ball_velocity);
 
 	//----- gradient trails -----
 
